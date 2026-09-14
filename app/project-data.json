@@ -1,0 +1,39 @@
+{
+  "projects": [
+    {
+      "name": "Design system refresh",
+      "owner": "Maya Chen",
+      "status": "On track",
+      "recentActivity": "Published the updated button and form patterns for review.",
+      "priority": "High"
+    },
+    {
+      "name": "Mobile onboarding",
+      "owner": "Jordan Ellis",
+      "status": "At risk",
+      "recentActivity": "Waiting on analytics events before the next usability test.",
+      "priority": "Medium"
+    },
+    {
+      "name": "API reliability",
+      "owner": "Sam Rivera",
+      "status": "Blocked",
+      "recentActivity": "Infrastructure access request is with the platform team.",
+      "priority": "High"
+    },
+    {
+      "name": "Contributor docs",
+      "owner": "Priya Nair",
+      "status": "Complete",
+      "recentActivity": "Shipped the new local setup guide and contribution checklist.",
+      "priority": "Low"
+    },
+    {
+      "name": "Accessibility audit",
+      "owner": "Alex Morgan",
+      "status": "On track",
+      "recentActivity": "Completed keyboard navigation review across the core flows.",
+      "priority": "Low"
+    }
+  ]
+}

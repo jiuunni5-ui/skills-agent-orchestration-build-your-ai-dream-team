@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Team overview</p>
+          <h1>Project Pulse</h1>
+          <p class="intro">A quick view of the work in motion, who owns it, and where contributors can make the biggest impact.</p>
+        </div>
+        <p class="updated-note">Active portfolio</p>
+      </header>
+
+      <section class="projects-section" aria-labelledby="active-projects-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Current focus</p>
+            <h2 id="active-projects-heading">Active projects</h2>
+          </div>
+          <p id="project-count" class="project-count" aria-live="polite"></p>
+        </div>
+        <div id="project-grid" class="project-grid" aria-live="polite">
+          <p class="loading-state">Loading projects...</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const projectGrid = document.querySelector("#project-grid");
+      const projectCount = document.querySelector("#project-count");
+      const knownStatuses = new Set(["on track", "at risk", "blocked", "complete"]);
+      const knownPriorities = new Set(["high", "medium", "low"]);
+
+      function normalizedValue(value) {
+        return typeof value === "string" ? value.trim() : "";
+      }
+
+      function stateClass(value, knownValues, fallback) {
+        const normalized = normalizedValue(value).toLowerCase();
+        return knownValues.has(normalized) ? normalized.replaceAll(" ", "-") : fallback;
+      }
+
+      function createLabeledValue(label, value) {
+        const wrapper = document.createElement("div");
+        const term = document.createElement("dt");
+        const description = document.createElement("dd");
+        term.textContent = label;
+        description.textContent = value;
+        wrapper.append(term, description);
+        return wrapper;
+      }
+
+      function createProjectCard(project) {
+        const article = document.createElement("article");
+        article.className = "project-card";
+
+        const name = normalizedValue(project.name) || "Unnamed project";
+        const owner = normalizedValue(project.owner) || "Owner not assigned";
+        const status = normalizedValue(project.status) || "Status unknown";
+        const priority = normalizedValue(project.priority) || "Priority not set";
+        const activity = normalizedValue(project.recentActivity) || "No recent activity recorded.";
+        const statusClass = stateClass(project.status, knownStatuses, "unknown");
+        const priorityClass = stateClass(project.priority, knownPriorities, "unset");
+
+        const heading = document.createElement("h3");
+        heading.textContent = name;
+
+        const statusBadge = document.createElement("span");
+        statusBadge.className = `status-badge status-${statusClass}`;
+        statusBadge.setAttribute("aria-label", `Status: ${status}`);
+        const statusDot = document.createElement("span");
+        statusDot.className = "status-dot";
+        statusDot.setAttribute("aria-hidden", "true");
+        const statusText = document.createElement("span");
+        statusText.textContent = status;
+        statusBadge.append(statusDot, statusText);
+
+        const cardHeader = document.createElement("div");
+        cardHeader.className = "card-header";
+        cardHeader.append(heading, statusBadge);
+
+        const details = document.createElement("dl");
+        details.className = "project-details";
+        details.append(
+          createLabeledValue("Owner", owner),
+          createLabeledValue("Priority", priority)
+        );
+
+        const activityLabel = document.createElement("p");
+        activityLabel.className = "activity-label";
+        activityLabel.textContent = "Recent activity";
+        const activityText = document.createElement("p");
+        activityText.className = "activity-text";
+        activityText.textContent = activity;
+
+        const priorityText = document.createElement("p");
+        priorityText.className = `priority-note priority-${priorityClass}`;
+        priorityText.textContent = priorityClass === "unset" ? "Priority not set" : `${priority} priority`;
+
+        article.append(cardHeader, details, priorityText, activityLabel, activityText);
+        return article;
+      }
+
+      function showError(message) {
+        projectCount.textContent = "";
+        projectGrid.replaceChildren();
+        const error = document.createElement("p");
+        error.className = "error-state";
+        error.setAttribute("role", "alert");
+        error.textContent = `Unable to load projects: ${message}`;
+        projectGrid.append(error);
+      }
+
+      async function loadProjects() {
+        try {
+          const response = await fetch("project-data.json", { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(`the data file returned HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          if (!data || !Array.isArray(data.projects)) {
+            throw new Error("the data file does not contain a projects array");
+          }
+
+          projectGrid.replaceChildren();
+          if (data.projects.length === 0) {
+            projectCount.textContent = "0 projects";
+            const emptyState = document.createElement("p");
+            emptyState.className = "empty-state";
+            emptyState.textContent = "No active projects right now.";
+            projectGrid.append(emptyState);
+            return;
+          }
+
+          projectCount.textContent = `${data.projects.length} project${data.projects.length === 1 ? "" : "s"}`;
+          data.projects.forEach((project) => projectGrid.append(createProjectCard(project)));
+        } catch (error) {
+          showError(error instanceof Error ? error.message : "an unexpected error occurred");
+        }
+      }
+
+      loadProjects();
+    </script>
+  </body>
+</html>
